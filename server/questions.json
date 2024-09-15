@@ -1,0 +1,8 @@
+[
+  {
+    "category": "Culture Générale",
+    "question": "Quelle est la capitale du Canada ?",
+    "options": ["Ottawa", "Toronto", "Vancouver", "Montréal"],
+    "correctAnswer": "Ottawa"
+  }
+]

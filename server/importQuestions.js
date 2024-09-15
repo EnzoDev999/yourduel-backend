@@ -1,28 +1,29 @@
 const mongoose = require("mongoose");
-const fs = require("fs");
-const Question = require("./models/Question"); // Assurez-vous que le chemin est correct
-const dotenv = require("dotenv");
+const Question = require("./models/Question"); // Chemin vers ton modèle
+const questionsData = require("./questions.json");
+require("dotenv").config();
+const connectDB = require("./config/db");
 
-// Charger les variables d'environnement depuis la racine du projet
-dotenv.config({ path: "../.env" }); // Spécifie le chemin relatif vers le fichier .env
+connectDB();
 
-// Connexion à MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Lire les questions depuis le fichier JSON
-const questionsData = JSON.parse(fs.readFileSync("./questions.json", "utf-8")); // Assurez-vous que le chemin est correct
-
-// Fonction pour importer les questions
 const importQuestions = async () => {
   try {
-    // Supprimer les anciennes questions (si besoin)
-    await Question.deleteMany();
+    for (const question of questionsData) {
+      // Vérifie si la question existe déjà en fonction du texte de la question
+      const existingQuestion = await Question.findOne({
+        question: question.question,
+      });
 
-    // Insérer les nouvelles questions
-    await Question.insertMany(questionsData.questions);
+      if (existingQuestion) {
+        console.log(`La question existe déjà: ${question.question}`);
+      } else {
+        // Si la question n'existe pas, elle est insérée
+        await Question.create(question);
+        console.log(`Nouvelle question ajoutée: ${question.question}`);
+      }
+    }
+
+    console.log("Importation des nouvelles questions terminée !");
     process.exit();
   } catch (error) {
     console.error("Erreur lors de l'importation des questions :", error);
@@ -30,5 +31,4 @@ const importQuestions = async () => {
   }
 };
 
-// Appeler la fonction pour lancer l'importation
 importQuestions();
