@@ -14,9 +14,8 @@ exports.createDuel = async (req, res, io) => {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
-    // Utiliser une variable d'environnement pour l'URL de l'API côté serveur
-    const API_URL =
-      process.env.REACT_APP_API_URL_NETWORK || "http://localhost:5000";
+    // Utiliser simplement process.env.API_URL pour récupérer l'URL du backend
+    const API_URL = process.env.API_URL || "http://localhost:5000";
 
     // Appel à l'API pour obtenir une question aléatoire dès la création du duel
     const response = await axios.get(
