@@ -44,26 +44,20 @@ io.on("connection", (socket) => {
 
   // Le joueur rejoint la room de l'utilisateur et du duel
   socket.on("joinRooms", ({ userId, duelId }) => {
-    console.log(
-      `L'utilisateur ${userId} a rejoint son room et la room du duel ${duelId}`
-    );
     socket.join(userId); // Joindre la room de l'utilisateur pour les événements personnels
     socket.join(duelId); // Joindre la room du duel pour les événements de duel
   });
 
   socket.on("duelReceived", (data) => {
-    console.log("Duel reçu :", data);
     io.to(data.opponent).emit("duelReceived", data); // Notifie l'adversaire
   });
 
   socket.on("duelAccepted", (data) => {
-    console.log("Duel accepté :", data);
     io.to(data.challenger).emit("duelAccepted", data); // Notifie le challenger
     io.to(data.opponent).emit("duelAccepted", data); // Notifie l'adversaire
   });
 
   socket.on("duelCompleted", (duel) => {
-    console.log("Événement duelCompleted émis pour le duel:", duel._id);
     io.to(duel._id).emit("duelCompleted", duel); // Notifie la room du duel
   });
 });
