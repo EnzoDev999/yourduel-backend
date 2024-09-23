@@ -39,7 +39,9 @@ router.get("/users/:username", async (req, res) => {
 // Route pour récuper tous les utilisateurs
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({}, "username _id"); // Récupérer uniquement les username et l'ID de l'utilisateur
+    const users = await User.find({}, "username _id points").sort({
+      points: -1,
+    }); // Récupérer uniquement les username et l'ID de l'utilisateur
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({
