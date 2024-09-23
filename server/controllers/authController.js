@@ -72,11 +72,22 @@ exports.getUserProfile = async (req, res) => {
 // Obtenir le classement des utilisateurs
 exports.getLeaderboard = async (req, res) => {
   try {
-    const users = await User.find({ points: { $gte: 1 } }) // Trouver les utilisateurs avec au moins 1 point
-      .sort({ points: -1 }) // Trier par points descendant
-      .select("username points totalWins totalDraws totalDuelsPlayed"); // Sélectionner les champs utilisateur et points
+    const { page = 1, limit = 5 } = req.query; // Valeurs par défaut si page et limit ne sont pas spécifiés
 
-    res.status(200).json(users);
+    // Récupérer les utilisateurs avec au moins 1 point
+    const users = await User.find({ points: { $gte: 1 } })
+      .sort({ points: -1 }) // Trier par points décroissants
+      .select("username points totalWins totalDraws totalDuelsPlayed") // Sélectionner les champs
+      .skip((page - 1) * limit) // Sauter les résultats des pages précédentes
+      .limit(parseInt(limit)); // Limiter le nombre de résultats à la limite spécifiée
+
+    const totalUsers = await User.countDocuments({ points: { $gte: 1 } }); // Compter le nombre total d'utilisateurs avec au moins 1 point
+
+    res.status(200).json({
+      users, // Renvoie les utilisateurs pour la page actuelle
+      totalPages: Math.ceil(totalUsers / limit), // Calculer le nombre total de pages
+      currentPage: parseInt(page), // Page actuelle
+    });
   } catch (error) {
     console.error("Erreur lors de la récupération du classement :", error);
     res.status(500).json({
