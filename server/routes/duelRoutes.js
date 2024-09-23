@@ -7,6 +7,7 @@ const {
   deleteDuel,
   submitAnswer,
   deleteAllDuels,
+  getDuelById,
 } = require("../controllers/duelController");
 
 module.exports = (io) => {
@@ -22,6 +23,9 @@ module.exports = (io) => {
 
   // Route pour récupérer tous les duels
   router.get("/", getDuels);
+
+  // Route pour récupérer un duel spécifique
+  router.get("/:id", (req, res) => getDuelById(req, res));
 
   // Route pour récupérer les duels d'un utilisateur spécifique
   router.get("/user/:userId", getUserDuels);

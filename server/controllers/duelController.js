@@ -83,6 +83,19 @@ exports.getDuels = async (req, res) => {
   }
 };
 
+// Contrôleur pour récupérer un duel spécifique par ID
+exports.getDuelById = async (req, res) => {
+  try {
+    const duel = await Duel.findById(req.params.id);
+    if (!duel) {
+      return res.status(404).json({ message: "Duel non trouvé" });
+    }
+    res.status(200).json(duel);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur du serveur", error });
+  }
+};
+
 exports.getUserDuels = async (req, res) => {
   try {
     const userId = req.params.userId;

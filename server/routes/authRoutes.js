@@ -54,7 +54,7 @@ router.get("/users", async (req, res) => {
 // Route pour obtenir l'historique des duels de l'utilisateur
 router.get("/duelHistory/:userId", async (req, res) => {
   try {
-    const { page = 1, limit = 3 } = req.query; // Par défaut, afficher les 3 derniers duels
+    const { page = 1, limit = 1 } = req.query; // Par défaut, afficher les 3 derniers duels
 
     const user = await User.findById(req.params.userId);
 
