@@ -6,6 +6,13 @@ const axios = require("axios");
 exports.createDuel = async (req, res, io) => {
   const { challenger, opponent, category } = req.body;
 
+  // Vérification : empêcher d'envoyer un duel à soi-même
+  if (challenger.toString() === opponent.toString()) {
+    return res.status(400).json({
+      message: "Vous ne pouvez pas vous envoyer un duel à vous-même !",
+    });
+  }
+
   try {
     const challengerUser = await User.findById(challenger);
     const opponentUser = await User.findById(opponent);
