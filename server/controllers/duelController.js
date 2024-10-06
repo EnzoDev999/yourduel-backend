@@ -129,6 +129,7 @@ exports.getUserDuels = async (req, res) => {
 };
 
 // Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
+// Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
 exports.submitAnswer = async (req, res, io) => {
   try {
     const { userId, answer } = req.body; // On récupère seulement l'userId et la réponse dans le body
@@ -155,22 +156,24 @@ exports.submitAnswer = async (req, res, io) => {
       }
       duel.challengerAnswer = answer;
       duel.challengerAnswered = true;
-      if (
+
+      // Attribution de points pour une bonne réponse (1 point par bonne réponse)
+      duel.challengerPointsGained =
         answer.trim().toLowerCase() === duel.correctAnswer.trim().toLowerCase()
-      ) {
-        duel.challengerPointsGained = 1;
-      }
+          ? 1
+          : 0; // Pas de points pour une mauvaise réponse
     } else if (duel.opponent.toString() === userId.toString()) {
       if (duel.opponentAnswered) {
         return res.status(400).json({ message: "L'adversaire a déjà répondu" });
       }
       duel.opponentAnswer = answer;
       duel.opponentAnswered = true;
-      if (
+
+      // Attribution de points pour une bonne réponse (1 point par bonne réponse)
+      duel.opponentPointsGained =
         answer.trim().toLowerCase() === duel.correctAnswer.trim().toLowerCase()
-      ) {
-        duel.opponentPointsGained = 1;
-      }
+          ? 1
+          : 0; // Pas de points pour une mauvaise réponse
     } else {
       return res
         .status(403)
@@ -184,31 +187,43 @@ exports.submitAnswer = async (req, res, io) => {
       let challengerUser = await User.findById(duel.challenger);
       let opponentUser = await User.findById(duel.opponent);
 
+      // Log des points avant l'attribution
+      console.log(
+        "Avant attribution - Challenger Points: ",
+        challengerUser.points
+      );
+      console.log("Avant attribution - Opponent Points: ", opponentUser.points);
+
       // Détermine le gagnant ou égalité pour les deux joueurs
       let challengerResult = "draw";
       let opponentResult = "draw";
 
+      // Si le challenger a plus de points que l'adversaire
       if (duel.challengerPointsGained > duel.opponentPointsGained) {
         duel.winner = duel.challengerUsername;
 
-        // Mettre à jour les statistiques du challenger (victoire)
+        // Mise à jour des statistiques du challenger (victoire)
         challengerUser.totalWins += 1;
-        challengerUser.points += 1;
+        challengerUser.points += 2; // 2 points pour la victoire
         opponentUser.totalLosses += 1;
 
         challengerResult = "win";
         opponentResult = "loss";
-      } else if (duel.opponentPointsGained > duel.challengerPointsGained) {
+      }
+      // Si l'adversaire a plus de points que le challenger
+      else if (duel.opponentPointsGained > duel.challengerPointsGained) {
         duel.winner = duel.opponentUsername;
 
-        // Mettre à jour les statistiques de l'opponent (victoire)
+        // Mise à jour des statistiques de l'adversaire (victoire)
         opponentUser.totalWins += 1;
-        opponentUser.points += 1;
+        opponentUser.points += 2; // 2 points pour la victoire
         challengerUser.totalLosses += 1;
 
         challengerResult = "loss";
         opponentResult = "win";
-      } else {
+      }
+      // Si c'est une égalité
+      else {
         duel.winner = "draw"; // Égalité
 
         // Compte uniquement l'égalité si les deux joueurs ont marqué au moins un point
@@ -216,11 +231,18 @@ exports.submitAnswer = async (req, res, io) => {
           challengerUser.totalDraws += 1;
           opponentUser.totalDraws += 1;
 
-          // Les deux joueurs reçoivent un point s'ils ont marqué au moins un point chacun
-          challengerUser.points += 1;
-          opponentUser.points += 1;
+          // Les deux joueurs reçoivent 1 point s'ils ont marqué au moins un point chacun
+          challengerUser.points += 1; // 1 point pour une égalité (dans le cas d'une égalité de bonnes réponses)
+          opponentUser.points += 1; // 1 point pour une égalité (dans le cas d'une égalité de bonnes réponses)
         }
       }
+
+      // Log des points après l'attribution
+      console.log(
+        "Après attribution - Challenger Points: ",
+        challengerUser.points
+      );
+      console.log("Après attribution - Opponent Points: ", opponentUser.points);
 
       // Mettre à jour le nombre de duels joués pour les deux joueurs
       challengerUser.totalDuelsPlayed += 1;
@@ -230,7 +252,7 @@ exports.submitAnswer = async (req, res, io) => {
       challengerUser.duelsHistory.push({
         duelId: duel._id,
         result: challengerResult,
-        pointsGained: duel.challengerPointsGained,
+        pointsGained: duel.challengerPointsGained, // Points pour les bonnes réponses
         pointsLost: challengerResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.challengerAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
@@ -241,7 +263,7 @@ exports.submitAnswer = async (req, res, io) => {
       opponentUser.duelsHistory.push({
         duelId: duel._id,
         result: opponentResult,
-        pointsGained: duel.opponentPointsGained,
+        pointsGained: duel.opponentPointsGained, // Points pour les bonnes réponses
         pointsLost: opponentResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.opponentAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
@@ -253,7 +275,7 @@ exports.submitAnswer = async (req, res, io) => {
       await challengerUser.save();
       await opponentUser.save();
 
-      // Emission d'un événement pour notifier que le leaderboard à été mis à jour
+      // Emission d'un événement pour notifier que le leaderboard a été mis à jour
       io.emit("leaderboardUpdated");
 
       // Notifie les joueurs via WebSocket
