@@ -129,7 +129,6 @@ exports.getUserDuels = async (req, res) => {
 };
 
 // Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
-// Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
 exports.submitAnswer = async (req, res, io) => {
   try {
     const { userId, answer } = req.body; // On récupère seulement l'userId et la réponse dans le body
@@ -187,13 +186,6 @@ exports.submitAnswer = async (req, res, io) => {
       let challengerUser = await User.findById(duel.challenger);
       let opponentUser = await User.findById(duel.opponent);
 
-      // Log des points avant l'attribution
-      console.log(
-        "Avant attribution - Challenger Points: ",
-        challengerUser.points
-      );
-      console.log("Avant attribution - Opponent Points: ", opponentUser.points);
-
       // Détermine le gagnant ou égalité pour les deux joueurs
       let challengerResult = "draw";
       let opponentResult = "draw";
@@ -237,13 +229,6 @@ exports.submitAnswer = async (req, res, io) => {
         }
       }
 
-      // Log des points après l'attribution
-      console.log(
-        "Après attribution - Challenger Points: ",
-        challengerUser.points
-      );
-      console.log("Après attribution - Opponent Points: ", opponentUser.points);
-
       // Mettre à jour le nombre de duels joués pour les deux joueurs
       challengerUser.totalDuelsPlayed += 1;
       opponentUser.totalDuelsPlayed += 1;
@@ -252,7 +237,7 @@ exports.submitAnswer = async (req, res, io) => {
       challengerUser.duelsHistory.push({
         duelId: duel._id,
         result: challengerResult,
-        pointsGained: duel.challengerPointsGained, // Points pour les bonnes réponses
+        pointsGained: duel.challengerPointsGained,
         pointsLost: challengerResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.challengerAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
@@ -263,7 +248,7 @@ exports.submitAnswer = async (req, res, io) => {
       opponentUser.duelsHistory.push({
         duelId: duel._id,
         result: opponentResult,
-        pointsGained: duel.opponentPointsGained, // Points pour les bonnes réponses
+        pointsGained: duel.opponentPointsGained,
         pointsLost: opponentResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.opponentAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
