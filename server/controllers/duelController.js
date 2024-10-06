@@ -201,6 +201,10 @@ exports.submitAnswer = async (req, res, io) => {
 
         challengerResult = "win";
         opponentResult = "loss";
+
+        // Mettre à jour les points gagnés dans l'historique
+        duel.challengerPointsGained = 2; // 2 points gagnés pour la victoire
+        duel.opponentPointsGained = 0; // 0 points pour la défaite
       }
       // Si l'adversaire a plus de points que le challenger
       else if (duel.opponentPointsGained > duel.challengerPointsGained) {
@@ -213,6 +217,10 @@ exports.submitAnswer = async (req, res, io) => {
 
         challengerResult = "loss";
         opponentResult = "win";
+
+        // Mettre à jour les points gagnés dans l'historique
+        duel.opponentPointsGained = 2; // 2 points gagnés pour la victoire
+        duel.challengerPointsGained = 0; // 0 points pour la défaite
       }
       // Si c'est une égalité
       else {
@@ -224,20 +232,20 @@ exports.submitAnswer = async (req, res, io) => {
           opponentUser.totalDraws += 1;
 
           // Les deux joueurs reçoivent 1 point s'ils ont marqué au moins un point chacun
-          challengerUser.points += 1; // 1 point pour une égalité (dans le cas d'une égalité de bonnes réponses)
-          opponentUser.points += 1; // 1 point pour une égalité (dans le cas d'une égalité de bonnes réponses)
+          challengerUser.points += 1; // 1 point pour une égalité
+          opponentUser.points += 1; // 1 point pour une égalité
+
+          // Mettre à jour les points gagnés dans l'historique
+          duel.challengerPointsGained = 1; // 1 point pour l'égalité
+          duel.opponentPointsGained = 1; // 1 point pour l'égalité
         }
       }
-
-      // Mettre à jour le nombre de duels joués pour les deux joueurs
-      challengerUser.totalDuelsPlayed += 1;
-      opponentUser.totalDuelsPlayed += 1;
 
       // Ajouter le duel à l'historique des deux utilisateurs
       challengerUser.duelsHistory.push({
         duelId: duel._id,
         result: challengerResult,
-        pointsGained: duel.challengerPointsGained,
+        pointsGained: duel.challengerPointsGained, // Points mis à jour selon le résultat
         pointsLost: challengerResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.challengerAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
@@ -248,7 +256,7 @@ exports.submitAnswer = async (req, res, io) => {
       opponentUser.duelsHistory.push({
         duelId: duel._id,
         result: opponentResult,
-        pointsGained: duel.opponentPointsGained,
+        pointsGained: duel.opponentPointsGained, // Points mis à jour selon le résultat
         pointsLost: opponentResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
         userAnswer: duel.opponentAnswer, // Ajout de la réponse de l'utilisateur
         correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
@@ -260,7 +268,7 @@ exports.submitAnswer = async (req, res, io) => {
       await challengerUser.save();
       await opponentUser.save();
 
-      // Emission d'un événement pour notifier que le leaderboard a été mis à jour
+      // Emission d'un événement pour notifier que le leaderboard à été mis à jour
       io.emit("leaderboardUpdated");
 
       // Notifie les joueurs via WebSocket
