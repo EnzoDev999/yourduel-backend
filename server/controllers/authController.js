@@ -124,3 +124,46 @@ exports.resetAllUserStats = async (req, res) => {
       .json({ message: "Erreur lors de la réinitialisation des statistiques" });
   }
 };
+
+exports.updateUsername = async (req, res) => {
+  const { newUsername } = req.body;
+  console.log("Reçu côté serveur :", newUsername); // Ajoutez ce log
+
+  if (!newUsername) {
+    return res
+      .status(400)
+      .json({ message: "Le nouveau nom d'utilisateur est obligatoire" });
+  }
+
+  try {
+    const userId = req.user._id;
+
+    // Vérifier si le pseudo existe déjà dans la base de données
+    const existingUser = await User.findOne({ username: newUsername });
+    if (existingUser) {
+      return res.status(409).json({ message: "Le pseudo est déjà pris" });
+    }
+
+    // Mettre à jour le nom d'utilisateur
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    user.username = newUsername;
+    await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Le nom d'utilisateur a été mis à jour avec succès" });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la mise à jour du nom d'utilisateur :",
+      error
+    );
+    res.status(500).json({
+      message: "Erreur lors de la mise à jour du nom d'utilisateur",
+      error,
+    });
+  }
+};

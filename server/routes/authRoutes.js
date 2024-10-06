@@ -5,6 +5,7 @@ const {
   getUserProfile,
   getLeaderboard,
   resetAllUserStats,
+  updateUsername,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware"); // Utilisation du middleware protect
 const User = require("../models/User");
@@ -19,6 +20,9 @@ router.post("/login", login);
 
 // Route pour récupérer le profil de l'utilisateur connecté
 router.get("/profile", protect, getUserProfile);
+
+// Route pour mettre à jour le nom d'utilisateur
+router.put("/updateUsername", protect, updateUsername);
 
 // Route pour récupérer un utilisateur par son nom d'utilisateur
 router.get("/users/:username", async (req, res) => {
